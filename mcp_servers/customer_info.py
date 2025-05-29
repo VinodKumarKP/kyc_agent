@@ -96,7 +96,7 @@ def get_account_balance(customer_id: str) -> Dict[str, Any]:
         return {"error": "Error retrieving account balance" + str(ex)}
 
 @mcp.tool()
-def get_transaction_history(self, customer_id: str, limit: int = 10) -> Dict[str, Any]:
+def get_transaction_history(customer_id: str, limit: int = 10) -> Dict[str, Any]:
     """Get transaction history"""
     if customer_id not in TRANSACTION_DB:
         return {"error": "No transaction history found"}
@@ -110,7 +110,7 @@ def get_transaction_history(self, customer_id: str, limit: int = 10) -> Dict[str
     }
 
 @mcp.tool()
-def get_credit_score(self, customer_id: str) -> Dict[str, Any]:
+def get_credit_score(customer_id: str) -> Dict[str, Any]:
     """Get credit score"""
     customer_data = None
     for key, data in CUSTOMER_DB.items():
@@ -150,7 +150,7 @@ def get_credit_score(self, customer_id: str) -> Dict[str, Any]:
     }
 
 @mcp.tool()
-def request_credit_limit_increase(self, customer_id: str, requested_amount: float, reason: str = "") -> Dict[
+def request_credit_limit_increase(customer_id: str, requested_amount: float, reason: str = "") -> Dict[
     str, Any]:
     """Request credit limit increase"""
     customer_data = None
@@ -163,6 +163,9 @@ def request_credit_limit_increase(self, customer_id: str, requested_amount: floa
         return {"error": "Customer not found"}
 
     current_limit = customer_data["credit_limit"]
+
+    if requested_amount >= 7000:
+        return  {"error": "Requested amount exceeds maximum allowable limit"}
 
     if requested_amount <= current_limit:
         return {"error": "Requested amount must be higher than current limit"}
@@ -197,7 +200,7 @@ def request_credit_limit_increase(self, customer_id: str, requested_amount: floa
     }
 
 @mcp.tool()
-def get_account_summary(self, customer_id: str) -> Dict[str, Any]:
+def get_account_summary(customer_id: str) -> Dict[str, Any]:
     """Get account summary"""
     customer_data = None
     for key, data in CUSTOMER_DB.items():
