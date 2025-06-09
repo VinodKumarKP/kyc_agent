@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 # Initialize MCP server
 mcp = FastMCP("name-lookup-tools")
 
-
 CUSTOMER_DB = {
     "john_doe_1234": {
         "customer_id": "CUST_001",
@@ -24,7 +23,15 @@ CUSTOMER_DB = {
         "credit_balance": 1250.00,
         "account_status": "active",
         "phone": "555-0123",
-        "email": "john.doe@email.com"
+        "email": "john.doe@email.com",
+        "kyc": {
+            "risk_score": 15 / 100,
+            "verification": "95%",
+            "documents": [
+                {"type": "Driver's License", "verified": "true", "meta_data": 'MA DL * Expires 2025-01-01'},
+                {"type": "Utility Bill", "verified": "true", "meta_data": 'Electric * Expires 2025-01-01'}
+            ]
+        }
     },
     "jane_smith_5678": {
         "customer_id": "CUST_002",
@@ -36,28 +43,45 @@ CUSTOMER_DB = {
         "credit_balance": 890.50,
         "account_status": "active",
         "phone": "555-0456",
-        "email": "jane.smith@email.com"
+        "email": "jane.smith@email.com",
+        "kyc": {
+            "risk_score": 85 / 100,
+            "verification": "20%",
+            "documents": [
+                {"type": "Driver's License", "verified": "false", "meta_data": 'MA DL * Expires 2025-01-01'},
+                {"type": "Utility Bill", "verified": "false", "meta_data": 'Electric * Expires 2025-01-01'}
+            ]
+        }
     }
 }
 
 TRANSACTION_DB = {
     "CUST_001": [
-        {"date": "2024-01-25", "description": "Amazon Purchase", "amount": -125.99, "balance": 1250.00, "category": "shopping"},
-        {"date": "2024-01-22", "description": "Payment Received", "amount": 500.00, "balance": 1375.99, "category": "payment"},
-        {"date": "2024-01-20", "description": "Shell Gas Station", "amount": -45.50, "balance": 875.99, "category": "fuel"},
-        {"date": "2024-01-18", "description": "Whole Foods", "amount": -89.34, "balance": 921.49, "category": "grocery"},
+        {"date": "2024-01-25", "description": "Amazon Purchase", "amount": -125.99, "balance": 1250.00,
+         "category": "shopping"},
+        {"date": "2024-01-22", "description": "Payment Received", "amount": 500.00, "balance": 1375.99,
+         "category": "payment"},
+        {"date": "2024-01-20", "description": "Shell Gas Station", "amount": -45.50, "balance": 875.99,
+         "category": "fuel"},
+        {"date": "2024-01-18", "description": "Whole Foods", "amount": -89.34, "balance": 921.49,
+         "category": "grocery"},
         {"date": "2024-01-15", "description": "Starbucks", "amount": -6.75, "balance": 1010.83, "category": "dining"}
     ],
     "CUST_002": [
-        {"date": "2024-01-24", "description": "Target Purchase", "amount": -67.89, "balance": 890.50, "category": "shopping"},
-        {"date": "2024-01-21", "description": "Payment Received", "amount": 300.00, "balance": 958.39, "category": "payment"},
-        {"date": "2024-01-19", "description": "Uber Ride", "amount": -15.25, "balance": 658.39, "category": "transportation"},
-        {"date": "2024-01-17", "description": "Netflix Subscription", "amount": -15.99, "balance": 673.64, "category": "entertainment"}
+        {"date": "2024-01-24", "description": "Target Purchase", "amount": -67.89, "balance": 890.50,
+         "category": "shopping"},
+        {"date": "2024-01-21", "description": "Payment Received", "amount": 300.00, "balance": 958.39,
+         "category": "payment"},
+        {"date": "2024-01-19", "description": "Uber Ride", "amount": -15.25, "balance": 658.39,
+         "category": "transportation"},
+        {"date": "2024-01-17", "description": "Netflix Subscription", "amount": -15.99, "balance": 673.64,
+         "category": "entertainment"}
     ]
 }
 
+
 @mcp.tool()
-def verify_customer(self, name: str, last_four_digits: str) -> Dict[str, Any]:
+def verify_customer(name: str, last_four_digits: str) -> Dict[str, Any]:
     """Verify customer identity"""
     lookup_key = f"{name.lower().replace(' ', '_')}_{last_four_digits}"
 
@@ -70,6 +94,7 @@ def verify_customer(self, name: str, last_four_digits: str) -> Dict[str, Any]:
             "verified": False,
             "error": "Customer not found or invalid credentials"
         }
+
 
 @mcp.tool()
 def get_account_balance(customer_id: str) -> Dict[str, Any]:
@@ -95,6 +120,7 @@ def get_account_balance(customer_id: str) -> Dict[str, Any]:
     except Exception as ex:
         return {"error": "Error retrieving account balance" + str(ex)}
 
+
 @mcp.tool()
 def get_transaction_history(customer_id: str, limit: int = 10) -> Dict[str, Any]:
     """Get transaction history"""
@@ -108,6 +134,7 @@ def get_transaction_history(customer_id: str, limit: int = 10) -> Dict[str, Any]
         "transaction_count": len(transactions),
         "transactions": transactions
     }
+
 
 @mcp.tool()
 def get_credit_score(customer_id: str) -> Dict[str, Any]:
@@ -149,6 +176,7 @@ def get_credit_score(customer_id: str) -> Dict[str, Any]:
         "last_updated": "2024-01-28"
     }
 
+
 @mcp.tool()
 def request_credit_limit_increase(customer_id: str, requested_amount: float, reason: str = "") -> Dict[
     str, Any]:
@@ -163,9 +191,6 @@ def request_credit_limit_increase(customer_id: str, requested_amount: float, rea
         return {"error": "Customer not found"}
 
     current_limit = customer_data["credit_limit"]
-
-    if requested_amount >= 7000:
-        return  {"error": "Requested amount exceeds maximum allowable limit"}
 
     if requested_amount <= current_limit:
         return {"error": "Requested amount must be higher than current limit"}
@@ -199,6 +224,7 @@ def request_credit_limit_increase(customer_id: str, requested_amount: float, rea
         "submitted_date": "2024-01-28"
     }
 
+
 @mcp.tool()
 def get_account_summary(customer_id: str) -> Dict[str, Any]:
     """Get account summary"""
@@ -228,6 +254,7 @@ def get_account_summary(customer_id: str) -> Dict[str, Any]:
         },
         "recent_transactions": recent_transactions
     }
+
 
 if __name__ == "__main__":
     mcp.run()

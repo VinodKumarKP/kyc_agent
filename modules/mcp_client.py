@@ -123,14 +123,15 @@ class MCPServerSession:
 
 
 class MCPBedrockClient:
-    def __init__(self, region_name: str = 'us-east-1'):
+    def __init__(self, region_name: str = 'us-east-2'):
         """Initialize Bedrock client with support for multiple MCP servers"""
         self.mcp_initialized = False
         self.bedrock_client = boto3.client(
             service_name='bedrock-runtime',
             region_name=region_name
         )
-        self.model_id = 'us.anthropic.claude-3-5-sonnet-20241022-v2:0'
+        # self.model_id = 'us.anthropic.claude-3-5-sonnet-20241022-v2:0'
+        self.model_id = 'us.anthropic.claude-3-5-sonnet-20241022-v2:0' #Example model ID
 
         # Multiple server support
         self.server_configs: List[MCPServerConfig] = []
@@ -309,7 +310,7 @@ class MCPBedrockClient:
 
             body = {
                 "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 1000,
+                "max_tokens": 512,
                 "system": enhanced_system_prompt,
                 "messages": messages,
                 **self.get_bedrock_tools_config()
@@ -317,6 +318,8 @@ class MCPBedrockClient:
 
             self.progress_callback("Sending prompt to Bedrock for parsing and coming up with action plan...")
             logger.info(f"Sending request to Bedrock: {user_message}")
+            logger.info(self.model_id)
+            logger.info(body)
 
             response = self.bedrock_client.invoke_model(
                 modelId=self.model_id,
